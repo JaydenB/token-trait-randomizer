@@ -2,6 +2,7 @@
 Generalised randomizer for generating traits with no repeated tokens.
 
 1) Please keep a "generated" folder in the same directory as `traits.py`
+   - This is where all generated data is saved too and no current processes exist to fix this if it doesn't exist.
 2) Update `run.py` to include your `.json` _Traits File_ and how many tokens you want to generate.
 
 -----
