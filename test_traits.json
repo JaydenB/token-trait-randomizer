@@ -1,0 +1,28 @@
+{
+  "traits": {
+    "Size": {
+      "values": ["Normal", "Jumbo", "Tiny"],
+      "weights": [70, 20, 10]
+    },
+    "Background": {
+      "values": ["White", "Black"],
+      "weights": [80, 20]
+    },
+    "Colour": {
+      "values" : ["White", "Black", "Red", "Green", "Blue", "Purple", "Pink", "Cyan", "Orange", "Yellow", "Teal"],
+      "weights" : [20, 20, 10, 10, 10, 5, 5, 5, 5, 5, 5]
+    },
+    "Material": {
+      "values": ["Wood", "Metal", "Resin"],
+      "weights": [60, 35, 5]
+    },
+    "Pattern": {
+      "values": ["None", "Diagonal Lines", "Straight Lines", "Skulls", "Hearts", "Flowers", "Checkered", "Ocean Wave"],
+      "weights": [40, 20, 20, 5, 5, 4, 5, 1]
+    },
+    "Casing": {
+      "values": ["None", "Bronze", "Silver", "Gold", "Dark Metal"],
+      "weights": [45, 25, 15, 10, 5]
+    }
+  }
+}
