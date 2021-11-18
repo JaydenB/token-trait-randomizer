@@ -158,7 +158,10 @@ class TraitGenerator(object):
         return m
 
     def dict_check(self, token: dict) -> bool:
-        return token in self.generated_trait_tokens
+        for trait_token in self.generated_trait_tokens:
+            if token == trait_token[2]:
+                return True
+        return False
 
 
 def load_dict_from_file(file_path: str) -> dict:
