@@ -45,19 +45,19 @@ class TraitGenerator(object):
         # Generate All In One File
         saving_dict = {}
         for trait_token in self.generated_trait_tokens:
-            saving_dict[trait_token[0]+1] = {"rarity": trait_token[1], "traits": trait_token[2]}
+            saving_dict[trait_token[0]] = {"rarity": trait_token[1], "traits": trait_token[2]}
         save_dict_to_file(saving_dict, f"generated/{self.orig_filepath}_all_in_one.json")
 
         # Generate Rarity File
         rarity_dict = {}
         for trait_token in self.generated_trait_tokens:
-            rarity_dict[trait_token[0]+1] = {"rarity": trait_token[1]}
+            rarity_dict[trait_token[0]] = {"rarity": trait_token[1]}
         save_dict_to_file(rarity_dict, f"generated/{self.orig_filepath}_rarity_list.json")
 
         # Save Individual Files
         for trait_token in self.generated_trait_tokens:
             trait_dict = {"traits": trait_token[2]}
-            save_dict_to_file(trait_dict, f"generated/{trait_token[0]+1}.json")
+            save_dict_to_file(trait_dict, f"generated/{trait_token[0]}.json")
 
         # Generate Real Weights
         save_dict_to_file(self.calculate_real_weights(), f"generated/{self.orig_filepath}_real_weights.json")
@@ -93,7 +93,7 @@ class TraitGenerator(object):
             self.generated_trait_tokens.append([i, self.token_rarity(new_token), new_token])
 
             if self.debug_mode:
-                print(f"\tGenerated #{i+1}: {new_token}")
+                print(f"\tGenerated #{i}: {new_token}")
 
         # Sort Generated Tokens based on their rarity indicator
         self.sorted_trait_tokens = sorted(self.generated_trait_tokens, key=lambda x: x[1], reverse=False)
@@ -120,7 +120,7 @@ class TraitGenerator(object):
 
         msg = f"Top {count} Rarity items:"
         for i in range(count):
-            msg += f"\n\t{i+1}: #{self.sorted_trait_tokens[i][0]} " \
+            msg += f"\n\t{i}: #{self.sorted_trait_tokens[i][0]} " \
                    f"{self.sorted_trait_tokens[i][1]}%\t" \
                    f"{self.sorted_trait_tokens[i][2]}"
         return f"{msg}"
@@ -133,7 +133,7 @@ class TraitGenerator(object):
 
         msg = f"\nBottom {count} Rarity items:"
         for i in range(count):
-            msg += f"\n\t{i + 1}: #{reversed_sorted[i][0]} " \
+            msg += f"\n\t{i}: #{reversed_sorted[i][0]} " \
                    f"{reversed_sorted[i][1]}%\t" \
                    f"{reversed_sorted[i][2]}"
         return f"{msg}\n"
