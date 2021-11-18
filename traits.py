@@ -69,8 +69,10 @@ class TraitGenerator(object):
             token[trait] = random.choices(self.traits[trait], weights=self.traits_weights[trait], k=1)[0]
         return token
 
-    def generate(self, count: int = 1) -> None:
+    def generate(self, count: int = 1, seed: int = 0) -> None:
         start_time = time.time()
+
+        random.seed(seed)
 
         max_tokens = self.max_tokens_from_traits()
         if max_tokens < count:

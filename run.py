@@ -3,11 +3,13 @@ import traits
 FILE_PATH = "test_traits.json"
 TOKEN_COUNT = 1111
 
+SEED = 0
+
 if __name__ == '__main__':
     generator = traits.TraitGenerator()
     generator.load_traits(filepath=FILE_PATH)
 
-    generator.generate(count=TOKEN_COUNT)
+    generator.generate(count=TOKEN_COUNT, seed=SEED)
     generator.save_to_file()
     print("")
 
