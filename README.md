@@ -22,5 +22,4 @@ Traits Example File Structure: *(`values` and `weights` must have equal list len
 
 -----
 
-_No dependencies required outside of Python 3.x_ 
-_(Only tested in Python 3.8)_
+_No dependencies required outside of Python 3.x_
