@@ -9,6 +9,7 @@ class TraitGenerator(object):
         self.debug_mode = debug
 
         # Storing all loaded in Trait data
+        self.traits_raw = {}
         self.traits = {}
         self.traits_weights = {}
         self.real_weights = {}
@@ -20,7 +21,7 @@ class TraitGenerator(object):
         self.generated_trait_tokens = []
         self.sorted_trait_tokens = None
 
-    # ----- Saving and Loading -----------------------------------------------------------------------------------------
+    # ----- Saving and Loading -----------------------------------------------------------
     def load_traits(self, filepath: str) -> None:
         self.orig_filepath = os.path.splitext(filepath)[0]
 
@@ -36,6 +37,7 @@ class TraitGenerator(object):
 
         traits = file_data.get('traits', {})
         for trait in traits:
+            self.traits_raw[trait] = traits[trait]
             self.traits[trait] = traits[trait].get('values', [])
             self.traits_weights[trait] = traits[trait].get('weights', [])
             self.real_weights[trait] = [0 for x in traits[trait].get('weights', [])]
@@ -60,14 +62,36 @@ class TraitGenerator(object):
             save_dict_to_file(trait_dict, f"generated/{trait_token[0]}.json")
 
         # Generate Real Weights
-        save_dict_to_file(self.calculate_real_weights(), f"generated/{self.orig_filepath}_real_weights.json")
+        save_dict_to_file(self.calculate_real_weights(),
+                          f"generated/{self.orig_filepath}_real_weights.json")
 
-    # ----- Generator --------------------------------------------------------------------------------------------------
+    # ----- Generator --------------------------------------------------------------------
     def generate_trait_token(self) -> dict:
         token = {}
         for trait in self.traits:
-            token[trait] = random.choices(self.traits[trait], weights=self.traits_weights[trait], k=1)[0]
+            # Skip trait if it is to run after all token generation
+            # Prevents things being too similar
+            if self.traits_raw[trait].get('last', False):
+                continue
+
+            # Select a random value for the trait
+            token[trait] = random.choices(self.traits[trait],
+                                          weights=self.traits_weights[trait],
+                                          k=1)[0]
         return token
+
+    def generate_last_trait_token(self, token: dict) -> dict:
+        new_token = token.copy()
+        for trait in self.traits:
+            # Skip if we have already generated it (not marked as last)
+            if not self.traits_raw[trait].get('last', False):
+                continue
+
+            new_token[trait] = random.choices(self.traits[trait],
+                                              weights=self.traits_weights[trait],
+                                              k=1)[0]
+
+        return new_token
 
     def generate(self, count: int = 1, seed: int = 0) -> None:
         start_time = time.time()
@@ -81,26 +105,40 @@ class TraitGenerator(object):
 
         print(f"Starting generation of {count}/{max_tokens} trait tokens!")
 
-        # Initiate Core Loop
+        # Generate Initial Tokens
+        tokens = []
         for i in range(count):
             # Search for a token that has not already been generated
             new_token = self.generate_trait_token()
             while self.dict_check(new_token):
                 new_token = self.generate_trait_token()
+            tokens.append(new_token)
 
+        # Generate 'Last' Token Traits
+        last_tokens = []
+        for token in tokens:
+            new_token = self.generate_last_trait_token(token)
+            while self.dict_check(new_token):
+                new_token = self.generate_last_trait_token(token)
+            last_tokens.append(new_token)
+
+        # Generate Rarities
+        for i, token in enumerate(last_tokens):
             # Update Real Weights to track final rarity of each trait
-            self.update_real_weights(new_token)
+            self.update_real_weights(token)
 
             # Add to our list of generated tokens
-            self.generated_trait_tokens.append([i, self.token_rarity(new_token), new_token])
+            self.generated_trait_tokens.append([i, self.token_rarity(token), token])
 
             if self.debug_mode:
-                print(f"\tGenerated #{i}: {new_token}")
+                print(f"\tGenerated #{i}: {token}")
 
         # Sort Generated Tokens based on their rarity indicator
-        self.sorted_trait_tokens = sorted(self.generated_trait_tokens, key=lambda x: x[1], reverse=False)
+        self.sorted_trait_tokens = sorted(
+            self.generated_trait_tokens, key=lambda x: x[1], reverse=False)
 
-        print(f"\n---------- Completed Trait Generation in {round(time.time() - start_time, 2)} seconds. ----------\n")
+        print(f"\n---------- Completed Trait Generation in "
+              f"{round(time.time() - start_time, 2)} seconds. ----------\n")
 
     def calculate_real_weights(self) -> dict:
         print("\n----- Calculated Real Weights -----")
@@ -110,12 +148,13 @@ class TraitGenerator(object):
             print(f"\nTrait: {trait}")
             for i, a in enumerate(self.real_weights[trait]):
                 generated = round((a / sum(self.real_weights[trait])) * 100.0, 2)
-                d[trait][self.traits[trait][i]] = {"original": self.traits_weights[trait][i], "generated": generated}
+                d[trait][self.traits[trait][i]] = \
+                    {"original": self.traits_weights[trait][i], "generated": generated}
                 print(f"\tExpected: {self.traits_weights[trait][i]}% ---> Generated: {generated}%")
         print("")
         return d
 
-    # ----- Printing for Debug -----------------------------------------------------------------------------------------
+    # ----- Printing for Debug -----------------------------------------------------------
     def top_rarity(self, count: int = 10) -> str:
         if self.sorted_trait_tokens is None:
             return "No data generated yet! Cancelling Top Rarity Print."
@@ -140,7 +179,7 @@ class TraitGenerator(object):
                    f"{reversed_sorted[i][2]}"
         return f"{msg}\n"
 
-    # ----- Utilities --------------------------------------------------------------------------------------------------
+    # ----- Utilities --------------------------------------------------------------------
     def update_real_weights(self, token: dict) -> None:
         for trait in token:
             self.real_weights[trait][self.index_of_trait(token, trait)] += 1
@@ -149,7 +188,8 @@ class TraitGenerator(object):
         return self.traits[trait].index(token[trait])
 
     def token_rarity(self, token) -> int:
-        return sum([self.traits_weights[trait][self.index_of_trait(token, trait)] for trait in self.traits])
+        return sum([self.traits_weights[trait][self.index_of_trait(token, trait)]
+                    for trait in self.traits])
 
     def max_tokens_from_traits(self) -> int:
         m = 1
@@ -163,6 +203,8 @@ class TraitGenerator(object):
                 return True
         return False
 
+
+# ----- File Saving and Loading Utilities ------------------------------------------------
 
 def load_dict_from_file(file_path: str) -> dict:
     try:

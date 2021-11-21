@@ -6,7 +6,8 @@
     },
     "Background": {
       "values": ["White", "Black"],
-      "weights": [80, 20]
+      "weights": [80, 20],
+      "last": true
     },
     "Colour": {
       "values" : ["White", "Black", "Red", "Green", "Blue", "Purple", "Pink", "Cyan", "Orange", "Yellow", "Teal"],
