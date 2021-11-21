@@ -5,9 +5,7 @@ import random
 
 
 class TraitGenerator(object):
-    def __init__(self, debug: bool = True):
-        self.debug_mode = debug
-
+    def __init__(self):
         # Storing all loaded in Trait data
         self.traits_raw = {}
         self.traits = {}
@@ -41,7 +39,7 @@ class TraitGenerator(object):
             self.traits[trait] = traits[trait].get('values', [])
             self.traits_weights[trait] = traits[trait].get('weights', [])
             self.real_weights[trait] = [0 for x in traits[trait].get('weights', [])]
-        print(f"{len(self.traits)} traits loaded from '{filepath}'.\n")
+        print(f"{len(self.traits)} traits loaded from '{filepath}'.")
 
     def save_to_file(self, filepath: str) -> None:
         # Generate All In One File
@@ -104,15 +102,20 @@ class TraitGenerator(object):
             count = max_tokens
 
         print(f"Starting generation of {count}/{max_tokens} trait tokens!")
+        # print(f"Progress: 1/{count} {progress_bar(0.0)}", end="")
 
         # Generate Initial Tokens
         tokens = []
         for i in range(count):
+            print(f"Progress: {i+1}/{count} {progress_bar(float(i / count))}", end="\r")
+
             # Search for a token that has not already been generated
             new_token = self.generate_trait_token()
             while new_token in tokens:
                 new_token = self.generate_trait_token()
             tokens.append(new_token)
+
+        print("\nFinishing up Tokens.")
 
         # Generate 'Last' Token Traits
         last_tokens = []
@@ -130,9 +133,6 @@ class TraitGenerator(object):
             # Add to our list of generated tokens
             self.generated_trait_tokens.append([i, self.token_rarity(token), token])
 
-            if self.debug_mode:
-                print(f"\tGenerated #{i}: {token}")
-
         # Sort Generated Tokens based on their rarity indicator
         self.sorted_trait_tokens = sorted(
             self.generated_trait_tokens, key=lambda x: x[1], reverse=False)
@@ -141,17 +141,13 @@ class TraitGenerator(object):
               f"{round(time.time() - start_time, 2)} seconds. ----------\n")
 
     def calculate_real_weights(self) -> dict:
-        print("\n----- Calculated Real Weights -----")
         d = {}
         for trait in self.real_weights:
             d[trait] = {}
-            print(f"\nTrait: {trait}")
             for i, a in enumerate(self.real_weights[trait]):
                 generated = round((a / sum(self.real_weights[trait])) * 100.0, 2)
                 d[trait][self.traits[trait][i]] = \
                     {"original": self.traits_weights[trait][i], "generated": generated}
-                print(f"\tExpected: {self.traits_weights[trait][i]}% ---> Generated: {generated}%")
-        print("")
         return d
 
     # ----- Printing for Debug -----------------------------------------------------------
@@ -226,6 +222,15 @@ def save_dict_to_file(d: dict, file_path: str) -> None:
         print(f"Error on saving data to '{file_path}'.")
 
 
+def progress_bar(percentage: float, bar_count: int = 25) -> str:
+    progress_ascii_style = ["░", "▒", "█"]
+    iteration = bar_count / 1.0
+    filled = bar_count - int(iteration * (1.0 - percentage))
+    progress_bar = [progress_ascii_style[2] for i in range(filled)] + \
+                   [progress_ascii_style[0] for i in range(bar_count - filled)]
+    return ''.join(progress_bar)
+
+
 # ----- Run Function ---------------------------------------------------------------------
 
 def run(input_filepath: str, output_filepath: str, count: int,
@@ -237,8 +242,45 @@ def run(input_filepath: str, output_filepath: str, count: int,
 
     if not dry_run:
         generator.save_to_file(filepath=output_filepath)
-        print("Files saved.")
+        print("Files saved.\n")
 
     if print_rarities > 0:
         print(generator.top_rarity(count=print_rarities))
         print(generator.bottom_rarity(count=print_rarities))
+
+
+# ----- Main for CLI ---------------------------------------------------------------------
+
+if __name__ == '__main__':
+    import argparse
+    parser = argparse.ArgumentParser()
+
+    # Positional Arguments
+    parser.add_argument("input",
+                        help="Input File Path to traits .json file.", type=str)
+
+    # Optional Arguments
+    parser.add_argument("-o", "--output",
+                        help="Output Directory Path for Generated Tokens.",
+                        type=str, default="")
+    parser.add_argument("-c", "--count",
+                        help="Final Token Count. Caps at Max from Input Traits.",
+                        type=int, default=1)
+    parser.add_argument("-s", "--seed",
+                        help="Seed for Random Generation.",
+                        type=int, default=0)
+    parser.add_argument("-pr", "--printrarities",
+                        help="Number of Top/Bottom Rarities to print out after generation.",
+                        type=int, default=0)
+    parser.add_argument("-dr", "--dryrun",
+                        help="Dry Run. Doesn't generate files after generation.",
+                        action="store_true")
+
+    args = parser.parse_args()
+
+    run(input_filepath=args.input,
+        output_filepath=args.output,
+        count=args.count,
+        seed=args.seed,
+        print_rarities=args.printrarities,
+        dry_run=args.dryrun)
