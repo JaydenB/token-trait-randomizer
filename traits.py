@@ -101,7 +101,7 @@ class TraitGenerator(object):
             print("Count is too high for number of traits. Limiting to Max.")
             count = max_tokens
 
-        print(f"Starting generation of {count}/{max_tokens} trait tokens!")
+        print(f"Starting generation of {count}/{max_tokens} trait tokens with seed: {seed}!")
         # print(f"Progress: 1/{count} {progress_bar(0.0)}", end="")
 
         # Generate Initial Tokens
