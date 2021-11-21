@@ -43,27 +43,27 @@ class TraitGenerator(object):
             self.real_weights[trait] = [0 for x in traits[trait].get('weights', [])]
         print(f"{len(self.traits)} traits loaded from '{filepath}'.\n")
 
-    def save_to_file(self) -> None:
+    def save_to_file(self, filepath: str) -> None:
         # Generate All In One File
         saving_dict = {}
         for trait_token in self.generated_trait_tokens:
             saving_dict[trait_token[0]] = {"rarity": trait_token[1], "traits": trait_token[2]}
-        save_dict_to_file(saving_dict, f"generated/{self.orig_filepath}_all_in_one.json")
+        save_dict_to_file(saving_dict, f"{filepath}generated_all_in_one.json")
 
         # Generate Rarity File
         rarity_dict = {}
         for trait_token in self.generated_trait_tokens:
             rarity_dict[trait_token[0]] = {"rarity": trait_token[1]}
-        save_dict_to_file(rarity_dict, f"generated/{self.orig_filepath}_rarity_list.json")
+        save_dict_to_file(rarity_dict, f"{filepath}generated_rarity_list.json")
 
         # Save Individual Files
         for trait_token in self.generated_trait_tokens:
             trait_dict = {"traits": trait_token[2]}
-            save_dict_to_file(trait_dict, f"generated/{trait_token[0]}.json")
+            save_dict_to_file(trait_dict, f"{filepath}{trait_token[0]}.json")
 
         # Generate Real Weights
         save_dict_to_file(self.calculate_real_weights(),
-                          f"generated/{self.orig_filepath}_real_weights.json")
+                          f"{filepath}generated_real_weights.json")
 
     # ----- Generator --------------------------------------------------------------------
     def generate_trait_token(self) -> dict:
@@ -110,7 +110,7 @@ class TraitGenerator(object):
         for i in range(count):
             # Search for a token that has not already been generated
             new_token = self.generate_trait_token()
-            while self.dict_check(new_token):
+            while new_token in tokens:
                 new_token = self.generate_trait_token()
             tokens.append(new_token)
 
@@ -118,7 +118,7 @@ class TraitGenerator(object):
         last_tokens = []
         for token in tokens:
             new_token = self.generate_last_trait_token(token)
-            while self.dict_check(new_token):
+            while new_token in last_tokens:
                 new_token = self.generate_last_trait_token(token)
             last_tokens.append(new_token)
 
@@ -194,6 +194,8 @@ class TraitGenerator(object):
     def max_tokens_from_traits(self) -> int:
         m = 1
         for trait in self.traits:
+            if self.traits_raw[trait].get('last', False):
+                continue
             m *= len(self.traits[trait])
         return m
 
@@ -219,6 +221,23 @@ def save_dict_to_file(d: dict, file_path: str) -> None:
     try:
         with open(file_path, 'w') as _file:
             _file.write(json.dumps(d))
-        print(f"Saved data to '{file_path}'.")
+        # print(f"Saved data to '{file_path}'.")
     except:
         print(f"Error on saving data to '{file_path}'.")
+
+
+# ----- Run Function ---------------------------------------------------------------------
+
+def run(input_filepath: str, output_filepath: str, count: int,
+        seed: int = 0, dry_run: bool = False) -> None:
+    generator = TraitGenerator()
+    generator.load_traits(filepath=input_filepath)
+
+    generator.generate(count=count, seed=seed)
+
+    if not dry_run:
+        generator.save_to_file(filepath=output_filepath)
+        print("Files saved.")
+
+    print(generator.top_rarity(count=10))
+    print(generator.bottom_rarity(count=10))
