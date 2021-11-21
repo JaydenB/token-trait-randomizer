@@ -161,8 +161,8 @@ class TraitGenerator(object):
 
         msg = f"Top {count} Rarity items:"
         for i in range(count):
-            msg += f"\n\t{i}: #{self.sorted_trait_tokens[i][0]} " \
-                   f"{self.sorted_trait_tokens[i][1]}%\t" \
+            msg += f"\n\t#{i}: index-{self.sorted_trait_tokens[i][0]} " \
+                   f"{self.sorted_trait_tokens[i][1]}r\t" \
                    f"{self.sorted_trait_tokens[i][2]}"
         return f"{msg}"
 
@@ -174,8 +174,8 @@ class TraitGenerator(object):
 
         msg = f"\nBottom {count} Rarity items:"
         for i in range(count):
-            msg += f"\n\t{i}: #{reversed_sorted[i][0]} " \
-                   f"{reversed_sorted[i][1]}%\t" \
+            msg += f"\n\t#{len(reversed_sorted)-1-i}: index-{reversed_sorted[i][0]} " \
+                   f"{reversed_sorted[i][1]}r\t" \
                    f"{reversed_sorted[i][2]}"
         return f"{msg}\n"
 
@@ -229,7 +229,7 @@ def save_dict_to_file(d: dict, file_path: str) -> None:
 # ----- Run Function ---------------------------------------------------------------------
 
 def run(input_filepath: str, output_filepath: str, count: int,
-        seed: int = 0, dry_run: bool = False) -> None:
+        seed: int = 0, print_rarities: int = 0, dry_run: bool = False) -> None:
     generator = TraitGenerator()
     generator.load_traits(filepath=input_filepath)
 
@@ -239,5 +239,6 @@ def run(input_filepath: str, output_filepath: str, count: int,
         generator.save_to_file(filepath=output_filepath)
         print("Files saved.")
 
-    print(generator.top_rarity(count=10))
-    print(generator.bottom_rarity(count=10))
+    if print_rarities > 0:
+        print(generator.top_rarity(count=print_rarities))
+        print(generator.bottom_rarity(count=print_rarities))

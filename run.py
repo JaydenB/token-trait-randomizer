@@ -11,5 +11,6 @@ if __name__ == '__main__':
         output_filepath="generated/",
         count=TOKEN_COUNT,
         seed=SEED,
+        print_rarities=10,
         dry_run=True
     )
