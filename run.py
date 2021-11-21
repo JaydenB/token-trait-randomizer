@@ -1,6 +1,6 @@
 import traits
 
-FILE_PATH = "test_traits.json"
+FILE_PATH = "examples/example_traits.json"
 TOKEN_COUNT = 1111
 
 SEED = 0
